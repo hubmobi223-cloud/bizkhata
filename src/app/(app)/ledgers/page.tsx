@@ -1,17 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FolderTree, Layers, Search } from "lucide-react";
+import { FolderTree, Layers, Pencil, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCompany } from "@/components/company/company-provider";
 import { Onboarding } from "@/components/company/onboarding";
 import { CreateGroupDialog } from "@/components/chart-of-accounts/group-dialog";
 import { CreateLedgerDialog } from "@/components/chart-of-accounts/ledger-dialog";
 import {
+  deactivateLedger,
   fetchAccountGroups,
   fetchLedgers,
   fetchTrialBalance,
@@ -73,6 +83,26 @@ export default function ChartOfAccountsPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [editingLedger, setEditingLedger] = useState<LedgerRow | null>(null);
+  const [deletingLedger, setDeletingLedger] = useState<LedgerRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteLedger() {
+    if (!deletingLedger) return;
+    setDeleting(true);
+    try {
+      await deactivateLedger(deletingLedger.id);
+      toast.success(`"${deletingLedger.name}" removed`);
+      setDeletingLedger(null);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error("Could not remove ledger", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -249,13 +279,14 @@ export default function ChartOfAccountsPage() {
                       <th className="px-3 py-2.5 font-medium">Group</th>
                       <th className="px-3 py-2.5 text-right font-medium">Opening</th>
                       <th className="px-3 py-2.5 text-right font-medium">Net balance</th>
+                      <th className="w-20 px-1 py-2.5" />
                     </tr>
                   </thead>
                   <tbody>
                     {visibleLedgers.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={4}
+                          colSpan={5}
                           className="px-3 py-8 text-center text-muted-foreground"
                         >
                           No ledgers found.
@@ -296,6 +327,28 @@ export default function ChartOfAccountsPage() {
                             <td className={cn("px-3 py-2.5 text-right tabular-nums", netCell.className)}>
                               {netCell.text}
                             </td>
+                            <td className="px-2 py-2.5">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="size-8 px-0"
+                                  onClick={() => setEditingLedger(ledger)}
+                                  aria-label={`Edit ${ledger.name}`}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="size-8 px-0 text-destructive hover:text-destructive"
+                                  onClick={() => setDeletingLedger(ledger)}
+                                  aria-label={`Remove ${ledger.name}`}
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         );
                       })
@@ -315,6 +368,57 @@ export default function ChartOfAccountsPage() {
           </Badge>
         ))}
       </div>
+
+      {editingLedger && (
+        <CreateLedgerDialog
+          key={editingLedger.id}
+          companyId={activeCompany?.id ?? ""}
+          groups={groups}
+          ledger={editingLedger}
+          open
+          onOpenChange={(next) => {
+            if (!next) setEditingLedger(null);
+          }}
+          onCreated={() => {
+            setEditingLedger(null);
+            setReloadKey((k) => k + 1);
+          }}
+        />
+      )}
+
+      <Dialog
+        open={!!deletingLedger}
+        onOpenChange={(next) => {
+          if (!next && !deleting) setDeletingLedger(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove ledger?</DialogTitle>
+            <DialogDescription>
+              {deletingLedger?.name} will be deactivated and hidden from
+              active lists. Existing transactions are preserved. This can be
+              reversed by reactivating the ledger.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingLedger(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteLedger}
+              disabled={deleting}
+            >
+              {deleting ? "Removing…" : "Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

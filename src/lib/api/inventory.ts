@@ -129,6 +129,56 @@ export async function createItem(input: {
   return data as ItemRow;
 }
 
+export async function updateItem(
+  id: string,
+  input: {
+    category_id?: string;
+    unit_id: string;
+    name: string;
+    code?: string;
+    hsn_sac?: string;
+    gst_rate: number;
+    item_type: ItemType;
+    batch_tracking: boolean;
+    expiry_tracking: boolean;
+    valuation_method: ValuationMethod;
+    is_sellable: boolean;
+    is_purchasable: boolean;
+  }
+): Promise<ItemRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("items")
+    .update({
+      category_id: input.category_id ?? null,
+      unit_id: input.unit_id,
+      name: input.name,
+      code: input.code?.trim() || null,
+      hsn_sac: input.hsn_sac?.trim() || null,
+      gst_rate: input.gst_rate,
+      item_type: input.item_type,
+      batch_tracking: input.batch_tracking,
+      expiry_tracking: input.expiry_tracking,
+      valuation_method: input.valuation_method,
+      is_sellable: input.is_sellable,
+      is_purchasable: input.is_purchasable,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as ItemRow;
+}
+
+export async function deactivateItem(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("items")
+    .update({ is_active: false })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function fetchStockBalance(
   companyId: string,
   itemId: string

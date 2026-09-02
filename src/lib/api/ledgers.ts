@@ -106,6 +106,52 @@ export async function createLedger(input: {
   return data as LedgerRow;
 }
 
+export async function updateLedger(
+  id: string,
+  input: {
+    name: string;
+    code?: string;
+    opening_debit: number;
+    opening_credit: number;
+    is_party: boolean;
+    is_cash_bank: boolean;
+    is_tax_ledger: boolean;
+    tax_rate: number;
+    gstin?: string;
+    state_code?: string;
+  }
+): Promise<LedgerRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ledgers")
+    .update({
+      name: input.name,
+      code: input.code?.trim() || null,
+      opening_debit: input.opening_debit,
+      opening_credit: input.opening_credit,
+      is_party: input.is_party,
+      is_cash_bank: input.is_cash_bank,
+      is_tax_ledger: input.is_tax_ledger,
+      tax_rate: input.tax_rate,
+      gstin: input.is_party && input.gstin ? input.gstin.trim() : null,
+      state_code: input.is_party && input.state_code ? input.state_code : null,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as LedgerRow;
+}
+
+export async function deactivateLedger(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("ledgers")
+    .update({ is_active: false })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export const GROUP_TYPE_LABELS: Record<GroupType, string> = {
   assets: "Assets",
   liabilities: "Liabilities",

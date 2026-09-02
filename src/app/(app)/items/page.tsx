@@ -2,18 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Boxes, FolderPlus, Layers, Scale, Search } from "lucide-react";
+import { ArrowRight, Boxes, FolderPlus, Layers, Pencil, Scale, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCompany } from "@/components/company/company-provider";
 import { Onboarding } from "@/components/company/onboarding";
 import { CreateUnitDialog } from "@/components/items/unit-dialog";
 import { CreateCategoryDialog } from "@/components/items/category-dialog";
 import { CreateItemDialog } from "@/components/items/item-dialog";
 import {
+  deactivateItem,
   fetchAllStock,
   fetchCategories,
   fetchItems,
@@ -38,6 +48,26 @@ export default function ItemsPage() {
   const [data, setData] = useState<ItemsData | null>(null);
   const [query, setQuery] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [editingItem, setEditingItem] = useState<ItemRow | null>(null);
+  const [deletingItem, setDeletingItem] = useState<ItemRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteItem() {
+    if (!deletingItem) return;
+    setDeleting(true);
+    try {
+      await deactivateItem(deletingItem.id);
+      toast.success(`"${deletingItem.name}" removed`);
+      setDeletingItem(null);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error("Could not remove item", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +211,7 @@ export default function ItemsPage() {
                   <th className="px-3 py-2.5 text-right font-medium">GST</th>
                   <th className="px-3 py-2.5 text-right font-medium">Stock</th>
                   <th className="px-3 py-2.5 text-right font-medium">Stock value</th>
-                  <th className="w-9 px-1 py-2.5" />
+                  <th className="w-28 px-1 py-2.5" />
                 </tr>
               </thead>
               <tbody>
@@ -224,12 +254,32 @@ export default function ItemsPage() {
                         <td className="px-3 py-2.5 text-right tabular-nums">
                           {formatAmount(stockRow?.value ?? 0)}
                         </td>
-                        <td className="px-2 py-2.5 text-right">
-                          <Button variant="ghost" size="sm" className="size-8 px-0" asChild>
-                            <Link href={`/items/${item.id}`} aria-label="Open item">
-                              <ArrowRight className="size-4" />
-                            </Link>
-                          </Button>
+                        <td className="px-2 py-2.5">
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="size-8 px-0"
+                              onClick={() => setEditingItem(item)}
+                              aria-label={`Edit ${item.name}`}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="size-8 px-0 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingItem(item)}
+                              aria-label={`Remove ${item.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="size-8 px-0" asChild>
+                              <Link href={`/items/${item.id}`} aria-label="Open item">
+                                <ArrowRight className="size-4" />
+                              </Link>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -240,6 +290,58 @@ export default function ItemsPage() {
           </div>
         </Card>
       )}
+
+      {editingItem && (
+        <CreateItemDialog
+          key={editingItem.id}
+          companyId={activeCompany?.id ?? ""}
+          units={units}
+          categories={categories}
+          item={editingItem}
+          open
+          onOpenChange={(next) => {
+            if (!next) setEditingItem(null);
+          }}
+          onCreated={() => {
+            setEditingItem(null);
+            setReloadKey((k) => k + 1);
+          }}
+        />
+      )}
+
+      <Dialog
+        open={!!deletingItem}
+        onOpenChange={(next) => {
+          if (!next && !deleting) setDeletingItem(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove item?</DialogTitle>
+            <DialogDescription>
+              {deletingItem?.name} will be deactivated and hidden from active
+              item lists. Existing stock and voucher history are preserved. This
+              can be reversed by reactivating the item.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingItem(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteItem}
+              disabled={deleting}
+            >
+              {deleting ? "Removing…" : "Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -26,9 +26,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Picker } from "@/components/ledger-picker";
-import { createLedger, GROUP_TYPE_LABELS } from "@/lib/api/ledgers";
+import { createLedger, updateLedger, GROUP_TYPE_LABELS } from "@/lib/api/ledgers";
 import { INDIAN_STATES } from "@/lib/states";
-import type { AccountGroup } from "@/lib/types";
+import type { AccountGroup, LedgerRow } from "@/lib/types";
 
 type OpeningMode = "none" | "debit" | "credit";
 
@@ -37,25 +37,49 @@ export function CreateLedgerDialog({
   groups,
   trigger,
   onCreated,
+  ledger,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   companyId: string;
   groups: AccountGroup[];
   trigger?: React.ReactNode;
   onCreated?: () => void;
+  ledger?: LedgerRow | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
+  const editing = !!ledger;
   const [open, setOpen] = useState(false);
+  const isOpen = controlledOpen ?? open;
+  const setOpenSafe = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState("");
-  const [groupId, setGroupId] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [openingMode, setOpeningMode] = useState<OpeningMode>("none");
-  const [openingAmount, setOpeningAmount] = useState("");
-  const [isParty, setIsParty] = useState(false);
-  const [gstin, setGstin] = useState("");
-  const [stateCode, setStateCode] = useState("");
-  const [isCashBank, setIsCashBank] = useState(false);
-  const [isTaxLedger, setIsTaxLedger] = useState(false);
-  const [taxRate, setTaxRate] = useState("");
+  const [name, setName] = useState(ledger?.name ?? "");
+  const [groupId, setGroupId] = useState<string | null>(ledger?.account_group_id ?? null);
+  const [code, setCode] = useState(ledger?.code ?? "");
+  const [openingMode, setOpeningMode] = useState<OpeningMode>(
+    ledger
+      ? ledger.opening_debit > 0
+        ? "debit"
+        : ledger.opening_credit > 0
+          ? "credit"
+          : "none"
+      : "none"
+  );
+  const [openingAmount, setOpeningAmount] = useState(
+    ledger
+      ? String(Math.max(ledger.opening_debit, ledger.opening_credit) || "")
+      : ""
+  );
+  const [isParty, setIsParty] = useState(ledger?.is_party ?? false);
+  const [gstin, setGstin] = useState(ledger?.gstin ?? "");
+  const [stateCode, setStateCode] = useState(ledger?.state_code ?? "");
+  const [isCashBank, setIsCashBank] = useState(ledger?.is_cash_bank ?? false);
+  const [isTaxLedger, setIsTaxLedger] = useState(ledger?.is_tax_ledger ?? false);
+  const [taxRate, setTaxRate] = useState(ledger?.tax_rate ? String(ledger.tax_rate) : "");
 
   const groupOptions = groups.map((g) => ({
     id: g.id,
@@ -106,9 +130,9 @@ export function CreateLedgerDialog({
 
     setSubmitting(true);
     try {
-      await createLedger({
+      const payload = {
         company_id: companyId,
-        account_group_id: groupId,
+        account_group_id: groupId!,
         name: name.trim(),
         code: code.trim() || undefined,
         opening_debit: openingMode === "debit" ? amount : 0,
@@ -119,10 +143,16 @@ export function CreateLedgerDialog({
         tax_rate: isTaxLedger ? parseFloat(taxRate) : 0,
         gstin: isParty ? gstin : undefined,
         state_code: isParty ? stateCode : undefined,
-      });
-      toast.success("Ledger created");
+      };
+      if (ledger) {
+        await updateLedger(ledger.id, payload);
+        toast.success("Ledger updated");
+      } else {
+        await createLedger(payload);
+        toast.success("Ledger created");
+      }
       onCreated?.();
-      setOpen(false);
+      setOpenSafe(false);
       reset();
     } catch (err) {
       toast.error("Could not create ledger", {
@@ -135,19 +165,20 @@ export function CreateLedgerDialog({
 
   return (
     <Dialog
-      open={open}
+      open={isOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setOpenSafe(next);
         if (!next) reset();
       }}
     >
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New ledger</DialogTitle>
+          <DialogTitle>{editing ? "Edit ledger" : "New ledger"}</DialogTitle>
           <DialogDescription>
-            Create a ledger under an existing account group. Mark parties to
-            capture GSTIN and track debtors/creditors.
+            {editing
+              ? "Update ledger details. Opening balance changes for this ledger will only apply as period adjustments."
+              : "Create a ledger under an existing account group. Mark parties to capture GSTIN and track debtors/creditors."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -292,13 +323,13 @@ export function CreateLedgerDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => setOpenSafe(false)}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
-              Create ledger
+              {editing ? "Save ledger" : "Create ledger"}
             </Button>
           </DialogFooter>
         </form>

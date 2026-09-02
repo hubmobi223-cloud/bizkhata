@@ -26,8 +26,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Picker } from "@/components/ledger-picker";
-import { createItem, ITEM_TYPE_LABELS } from "@/lib/api/inventory";
-import type { ItemCategory, ItemType, Unit, ValuationMethod } from "@/lib/types";
+import { createItem, updateItem, ITEM_TYPE_LABELS } from "@/lib/api/inventory";
+import type { ItemCategory, ItemRow, ItemType, Unit, ValuationMethod } from "@/lib/types";
 
 const GST_RATES = [0, 0.25, 3, 5, 12, 18, 28];
 
@@ -37,28 +37,40 @@ export function CreateItemDialog({
   categories,
   trigger,
   onCreated,
+  item,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   companyId: string;
   units: Unit[];
   categories: ItemCategory[];
   trigger?: React.ReactNode;
   onCreated?: () => void;
+  item?: ItemRow | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
+  const editing = !!item;
   const [open, setOpen] = useState(false);
+  const isOpen = controlledOpen ?? open;
+  const setOpenSafe = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [hsnSac, setHsnSac] = useState("");
-  const [itemType, setItemType] = useState<ItemType>("goods");
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [unitId, setUnitId] = useState<string | null>(units[0]?.id ?? null);
-  const [gstRate, setGstRate] = useState("18");
+  const [name, setName] = useState(item?.name ?? "");
+  const [code, setCode] = useState(item?.code ?? "");
+  const [hsnSac, setHsnSac] = useState(item?.hsn_sac ?? "");
+  const [itemType, setItemType] = useState<ItemType>(item?.item_type ?? "goods");
+  const [categoryId, setCategoryId] = useState<string | null>(item?.category_id ?? null);
+  const [unitId, setUnitId] = useState<string | null>(item?.unit_id ?? units[0]?.id ?? null);
+  const [gstRate, setGstRate] = useState(item?.gst_rate != null ? String(item.gst_rate) : "18");
   const [valuationMethod, setValuationMethod] =
-    useState<ValuationMethod>("weighted_average");
-  const [isSellable, setIsSellable] = useState(true);
-  const [isPurchasable, setIsPurchasable] = useState(true);
-  const [batchTracking, setBatchTracking] = useState(false);
-  const [expiryTracking, setExpiryTracking] = useState(false);
+    useState<ValuationMethod>(item?.valuation_method ?? "weighted_average");
+  const [isSellable, setIsSellable] = useState(item?.is_sellable ?? true);
+  const [isPurchasable, setIsPurchasable] = useState(item?.is_purchasable ?? true);
+  const [batchTracking, setBatchTracking] = useState(item?.batch_tracking ?? false);
+  const [expiryTracking, setExpiryTracking] = useState(item?.expiry_tracking ?? false);
 
   function reset() {
     setName("");
@@ -92,10 +104,10 @@ export function CreateItemDialog({
     }
     setSubmitting(true);
     try {
-      await createItem({
+      const payload = {
         company_id: companyId,
         category_id: categoryId ?? undefined,
-        unit_id: unitId,
+        unit_id: unitId!,
         name: name.trim(),
         code: code.trim() || undefined,
         hsn_sac: hsnSac.trim() || undefined,
@@ -106,13 +118,19 @@ export function CreateItemDialog({
         valuation_method: valuationMethod,
         is_sellable: isSellable,
         is_purchasable: isPurchasable,
-      });
-      toast.success("Item created");
+      };
+      if (item) {
+        await updateItem(item.id, payload);
+        toast.success("Item updated");
+      } else {
+        await createItem(payload);
+        toast.success("Item created");
+      }
       onCreated?.();
-      setOpen(false);
+      setOpenSafe(false);
       reset();
     } catch (err) {
-      toast.error("Could not create item", {
+      toast.error("Could not save item", {
         description: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
@@ -124,18 +142,20 @@ export function CreateItemDialog({
 
   return (
     <Dialog
-      open={open}
+      open={isOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setOpenSafe(next);
         if (!next) reset();
       }}
     >
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New item</DialogTitle>
+          <DialogTitle>{editing ? "Edit item" : "New item"}</DialogTitle>
           <DialogDescription>
-            Add a product or service to your inventory master.
+            {editing
+              ? "Update the product or service in your item master."
+              : "Add a product or service to your inventory master."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -289,12 +309,12 @@ export function CreateItemDialog({
           </div>
 
           <DialogFooter className="gap-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpenSafe(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting || showCreateUnitHint}>
               {submitting && <Loader2 className="animate-spin" />}
-              Create item
+              {editing ? "Save item" : "Create item"}
             </Button>
           </DialogFooter>
         </form>

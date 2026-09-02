@@ -10,6 +10,7 @@ import {
   FileChartColumn,
   LayoutDashboard,
   ReceiptText,
+  Settings,
   Store,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
@@ -33,7 +34,8 @@ const NAV: NavItem[] = [
   { href: "/items", label: "Items & Inventory", icon: Boxes },
   { href: "/vouchers", label: "Vouchers", icon: ReceiptText },
   { href: "/billing", label: "Billing & POS", icon: Store },
-  { href: "/reports", label: "Reports", icon: FileChartColumn, disabled: true, note: "Phase 6" },
+  { href: "/reports", label: "Reports", icon: FileChartColumn },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function isActive(href: string, pathname: string): boolean {

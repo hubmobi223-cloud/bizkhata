@@ -4,9 +4,13 @@ export interface Company {
   legal_name: string | null;
   gstin: string | null;
   pan: string | null;
+  address_line1: string | null;
   city: string | null;
   state: string | null;
   state_code: string | null;
+  pincode: string | null;
+  phone: string | null;
+  email: string | null;
   currency: string;
   logo_url: string | null;
   is_active: boolean;
