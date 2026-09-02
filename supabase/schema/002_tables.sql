@@ -86,12 +86,12 @@ create table public.ledgers (
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     constraint ux_ledgers_name unique (company_id, name),
-    constraint ux_ledgers_code unique (company_id, code) where code is not null,
     constraint ck_ledger_opening check (
         (opening_debit = 0) or (opening_credit = 0)
     )
 );
 
+create unique index ux_ledgers_code on public.ledgers (company_id, code) where code is not null;
 create index ix_ledgers_group on public.ledgers (company_id, account_group_id);
 
 create table public.tax_masters (
@@ -144,9 +144,10 @@ create table public.items (
     is_purchasable boolean not null default true,
     is_active boolean not null default true,
     created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now(),
-    constraint ux_items_code unique (company_id, code) where code is not null
+    updated_at timestamptz not null default now()
 );
+
+create unique index ux_items_code on public.items (company_id, code) where code is not null;
 
 create index ix_items_category on public.items (company_id, category_id);
 

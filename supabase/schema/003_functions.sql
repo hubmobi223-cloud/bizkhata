@@ -703,6 +703,7 @@ begin
 
     v_profit := coalesce(v_profit, 0);
 
+    return query
     with movable as (
         select ve.ledger_id, round(sum(ve.debit - ve.credit), 2) as net
         from public.voucher_entries ve
@@ -713,7 +714,7 @@ begin
         group by ve.ledger_id
     ),
     real_accounts as (
-        select l.id, l.name, ag.id as group_id, ag.name as group_name, ag.group_type,
+        select l.id, l.name as ledger_name, ag.id as group_id, ag.name as group_name, ag.group_type,
                round((l.opening_debit - l.opening_credit) + coalesce(mv.net, 0), 2) as bal
         from public.ledgers l
         join public.account_groups ag on ag.id = l.account_group_id
@@ -721,7 +722,6 @@ begin
         where l.company_id = p_company
           and ag.group_type in ('assets', 'liabilities')
     )
-    return query
     select
         case when ra.group_type = 'assets' then 'ASSETS' else 'LIABILITIES' end as section,
         ra.group_name,

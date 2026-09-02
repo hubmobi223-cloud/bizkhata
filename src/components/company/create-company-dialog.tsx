@@ -66,9 +66,16 @@ export function CreateCompanyDialog({ trigger }: { trigger?: ReactNode }) {
       setOpen(false);
       reset();
     } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : "Unknown error";
       toast.error("Could not create company", {
-        description: err instanceof Error ? err.message : "Unknown error",
+        description: message,
       });
+      console.error("Create company error:", err);
     } finally {
       setSubmitting(false);
     }
