@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "product": {
+    "name": "BizKhata",
+    "codename": "CloudLedger",
+    "category": "Cloud Accounting + Billing + GST + Inventory SaaS",
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "defaultTimezone": "Asia/Kolkata",
+    "defaultFinancialYear": { "startMonth": 4, "startDay": 1, "endMonth": 3, "endDay": 31 },
+    "primaryPlatform": "web",
+    "platforms": [
+      { "id": "web", "tech": "Next.js 16 (App Router) + Tailwind 4 + shadcn/ui", "status": "done" },
+      { "id": "android", "tech": "Flutter (mobile/)", "status": "partial" },
+      { "id": "ios", "tech": "Flutter (mobile/)", "status": "planned" },
+      { "id": "api", "tech": "PostgREST /api/v1", "status": "planned" }
+    ]
+  },
+  "modules": [
+    { "id": "auth", "name": "Authentication", "status": "done", "phase": 3 },
+    { "id": "org", "name": "Organizations / Companies", "status": "done", "phase": 4 },
+    { "id": "fy", "name": "Financial Years", "status": "done", "phase": 4 },
+    { "id": "team", "name": "Users / Roles / Permissions", "status": "partial", "phase": 5 },
+    { "id": "parties", "name": "Customers / Suppliers", "status": "planned", "phase": 6 },
+    { "id": "products", "name": "Products / Inventory", "status": "partial", "phase": 7 },
+    { "id": "sales", "name": "Sales", "status": "partial", "phase": 8 },
+    { "id": "purchase", "name": "Purchase", "status": "partial", "phase": 9 },
+    { "id": "accounting", "name": "Accounting Engine", "status": "partial", "phase": 10 },
+    { "id": "reports", "name": "Reports", "status": "partial", "phase": 11 },
+    { "id": "gst", "name": "GST Engine", "status": "partial", "phase": 12 },
+    { "id": "einvoice", "name": "E-Invoice", "status": "planned", "phase": 13 },
+    { "id": "ewaybill", "name": "E-Way Bill", "status": "planned", "phase": 14 },
+    { "id": "whatsapp", "name": "WhatsApp", "status": "planned", "phase": 15 },
+    { "id": "payments", "name": "Payments", "status": "planned", "phase": 16 },
+    { "id": "subscriptions", "name": "Subscriptions", "status": "planned", "phase": 17 },
+    { "id": "admin", "name": "Platform Admin", "status": "planned", "phase": 18 },
+    { "id": "branches", "name": "Branches", "status": "planned", "phase": null },
+    { "id": "warehouses", "name": "Warehouses", "status": "planned", "phase": 7 },
+    { "id": "audit", "name": "Audit Log", "status": "planned", "phase": null }
+  ],
+  "phases": [
+    { "id": 0, "title": "Repository analysis", "chapter": 1 },
+    { "id": 1, "title": "Project foundation", "chapter": 1 },
+    { "id": 2, "title": "Database foundation", "chapter": 2 },
+    { "id": 3, "title": "Authentication", "chapter": 3 },
+    { "id": 4, "title": "Organizations", "chapter": 4 },
+    { "id": 5, "title": "Users / Roles / Permissions", "chapter": 5 },
+    { "id": 6, "title": "Customers / Suppliers", "chapter": 6 },
+    { "id": 7, "title": "Products / Inventory", "chapter": 7 },
+    { "id": 8, "title": "Sales", "chapter": 8 },
+    { "id": 9, "title": "Purchase", "chapter": 9 },
+    { "id": 10, "title": "Accounting", "chapter": 10 },
+    { "id": 11, "title": "Reports", "chapter": 11 },
+    { "id": 12, "title": "GST", "chapter": 12 },
+    { "id": 13, "title": "E-Invoice", "chapter": 13 },
+    { "id": 14, "title": "E-Way Bill", "chapter": 14 },
+    { "id": 15, "title": "WhatsApp", "chapter": 15 },
+    { "id": 16, "title": "Payments", "chapter": 16 },
+    { "id": 17, "title": "Subscriptions", "chapter": 17 },
+    { "id": 18, "title": "Admin", "chapter": 18 },
+    { "id": 19, "title": "Security audit", "chapter": 19 },
+    { "id": 20, "title": "Performance optimization", "chapter": 20 },
+    { "id": 21, "title": "Production deployment", "chapter": 21 }
+  ],
+  "roles": [
+    { "id": "platform_super_admin", "name": "Platform Super Admin", "system": true },
+    { "id": "owner", "name": "Organization Owner", "system": true },
+    { "id": "admin", "name": "Organization Administrator", "system": true },
+    { "id": "accountant", "name": "Accountant", "system": true },
+    { "id": "sales_manager", "name": "Sales Manager", "system": true },
+    { "id": "sales_user", "name": "Sales User", "system": true },
+    { "id": "purchase_manager", "name": "Purchase Manager", "system": true },
+    { "id": "inventory_manager", "name": "Inventory Manager", "system": true },
+    { "id": "branch_manager", "name": "Branch Manager", "system": true },
+    { "id": "viewer", "name": "Viewer", "system": true }
+  ],
+  "permissionModel": {
+    "granular": true,
+    "customRolesFuture": true,
+    "examples": [
+      "customers.create", "customers.read", "customers.update", "customers.delete",
+      "sales.invoice.create", "sales.invoice.read", "sales.invoice.update", "sales.invoice.cancel",
+      "reports.profit_loss.read", "users.manage", "settings.manage"
+    ],
+    "convention": "<entity>.<action>",
+    "actions": ["create", "read", "update", "delete", "cancel", "post", "manage"]
+  },
+  "featureFlags": {
+    "enable_einvoice": { "enabled": false, "phase": 13 },
+    "enable_ewaybill": { "enabled": false, "phase": 14 },
+    "enable_whatsapp": { "enabled": false, "phase": 15 },
+    "enable_multi_branch": { "enabled": false, "phase": null },
+    "enable_manufacturing": { "enabled": false, "phase": null },
+    "enable_mobile_app": { "enabled": true, "phase": null }
+  },
+  "subscription": {
+    "plans": ["FREE", "STARTER", "BUSINESS", "PRO", "ENTERPRISE"],
+    "states": ["TRIAL", "ACTIVE", "PAST_DUE", "GRACE_PERIOD", "SUSPENDED", "CANCELLED", "EXPIRED"],
+    "expirationPolicy": "restrict_features_never_delete_data",
+    "usageLimitsTracked": ["users", "organizations", "branches", "invoices", "products", "storage", "whatsapp_messages", "api_requests"],
+    "userLimitTrackedServerSide": true
+  },
+  "gst": {
+    "rates": [0, 0.25, 3, 5, 12, 18, 28],
+    "taxTypes": ["CGST", "SGST", "IGST", "UTGST"],
+    "engineFile": "src/lib/gst.ts",
+    "mobileEngineFile": "mobile/lib/src/gst.dart",
+    "roundingDecimals": 2,
+    "intraSplit": "CGST + SGST",
+    "interSplit": "IGST",
+    "gstin": {
+      "validateFormat": true,
+      "extractStateCode": true,
+      "detectDuplicates": true,
+      "verifyStatusStoredSeparately": true
+    },
+    "statesRef": "src/lib/states.ts"
+  },
+  "numbering": {
+    "generation": "db_advisory_lock",
+    "current": { "engine": "fn_next_voucher_number", "trigger": "trg_vouchers_number", "padding": 6 },
+    "roadmap": { "configurablePrefix": true, "branchScoped": true, "series": ["INV-2026-00001", "DL-INV-00001"] }
+  },
+  "stock": {
+    "movementBased": true,
+    "allowNegativeStockDefault": false,
+    "orgSetting": "allow_negative_stock"
+  },
+  "payments": {
+    "methods": ["cash", "bank", "upi", "card", "cheque", "neft", "rtgs", "imps", "other"],
+    "states": ["unpaid", "partial", "paid", "overpaid"],
+    "overpaymentPolicy": "controlled_customer_advance"
+  },
+  "lifecycles": {
+    "salesInvoice": ["DRAFT", "CONFIRMED", "POSTED", "PAID", "PARTIALLY_PAID", "UNPAID", "CANCELLED"],
+    "voucherStatus": ["draft", "posted", "cancelled"]
+  },
+  "money": { "dbType": "NUMERIC(18,2)", "roundingDecimals": 2, "uiComputationsNonAuthoritative": true },
+  "errorContract": {
+    "shape": { "success": false, "error": { "code": "string", "message": "string", "details": [] }, "requestId": "string" },
+    "neverExposeStackTraces": true
+  },
+  "apiVersioning": { "current": "v1", "breakingGoesTo": "v2" },
+  "auditActions": [
+    "LOGIN", "LOGOUT", "CREATE", "UPDATE", "ARCHIVE", "POST", "CANCEL",
+    "PAYMENT", "REFUND", "GST_SUBMISSION", "EINVOICE_GENERATED", "EWAYBILL_GENERATED",
+    "WHATSAPP_SENT", "ROLE_CHANGED", "PASSWORD_CHANGED", "SETTINGS_CHANGED"
+  ],
+  "auditLog": {
+    "fields": ["organization_id", "actor_id", "action", "entity_type", "entity_id", "timestamp", "ip", "user_agent", "before", "after"],
+    "neverLog": ["secrets", "passwords", "access_tokens", "credentials"]
+  },
+  "idempotentOperations": ["payments", "webhooks", "external_api_requests", "einvoice_operations", "ewaybill_operations", "whatsapp_jobs"],
+  "integrations": {
+    "gst": { "pattern": "adapter", "interface": "GSTIntegrationProvider", "status": "planned" },
+    "ewaybill": { "pattern": "adapter", "status": "planned" },
+    "whatsapp": { "pattern": "adapter_async_jobs", "officialApiOnly": true, "statuses": ["PENDING", "PROCESSING", "SENT", "DELIVERED", "READ", "FAILED"], "status": "planned" },
+    "failureIsolation": "notification_failure_never_rolls_back_valid_financial_transaction"
+  },
+  "performanceTargetsMs": { "typicalApiResponse": 500, "typicalDashboard": 2000, "simpleQuery": 100, "invoiceCreationExcludingProvider": 1000 },
+  "securityBaseline": [
+    "https", "secure_auth", "password_hashing", "session_security", "jwt_refresh_protection",
+    "rbac", "tenant_isolation", "rate_limiting", "input_validation", "sqli_protection",
+    "xss_protection", "csrf_protection", "cors", "secure_cookies", "secret_management",
+    "webhook_signature_verification", "audit_logging", "database_backup", "restore_testing"
+  ]
+}
