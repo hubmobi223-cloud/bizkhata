@@ -461,14 +461,14 @@ declare
     v_purchase uuid;
 begin
     insert into public.account_groups (company_id, name, group_type, is_summary, sort_order)
-    values (p_company, 'Assets', 'assets', true, 10),
-           (p_company, 'Liabilities', 'liabilities', true, 20),
-           (p_company, 'Income', 'income', true, 30),
-           (p_company, 'Expenses', 'expense', true, 40)
+    values (p_company, 'Assets', 'assets'::public.account_group_type, true, 10),
+           (p_company, 'Liabilities', 'liabilities'::public.account_group_type, true, 20),
+           (p_company, 'Income', 'income'::public.account_group_type, true, 30),
+           (p_company, 'Expenses', 'expense'::public.account_group_type, true, 40)
     on conflict (company_id, name) do nothing;
 
     insert into public.account_groups (company_id, parent_id, name, group_type, sort_order)
-    select p_company, ag.id, s.name, s.group_type, s.sort_order
+    select p_company, ag.id, s.name, s.group_type::public.account_group_type, s.sort_order
     from (
         values
             ('Current Assets', 'assets', 11, 'Assets'),
@@ -574,34 +574,13 @@ as $$
 declare
     v_company uuid := gen_random_uuid();
     v_uid uuid := auth.uid();
-    v_year_start date;
-    v_year_end date;
-    v_fy_name text;
 begin
     if v_uid is null then
         raise exception 'Authentication required';
     end if;
 
-    if p_fy_start is null or p_fy_end is null then
-        v_year_start := date_trunc('year', current_date - interval '9 months')::date;
-        v_year_end := (v_year_start + interval '1 year')::date;
-    else
-        v_year_start := p_fy_start;
-        v_year_end := p_fy_end;
-    end if;
-
-    v_fy_name := 'FY ' || to_char(v_year_start, 'YYYY') || '-' || right(to_char(v_year_end, 'YYYY'), 2);
-
     insert into public.companies (id, name, gstin, state_code)
     values (v_company, p_name, p_gstin, p_state_code);
-
-    insert into public.company_members (company_id, user_id, role)
-    values (v_company, v_uid, 'owner');
-
-    insert into public.financial_years (company_id, name, start_date, end_date, is_active)
-    values (v_company, v_fy_name, v_year_start, v_year_end, true);
-
-    perform public.sp_seed_defaults(v_company);
 
     return v_company;
 end;

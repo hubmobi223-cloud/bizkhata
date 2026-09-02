@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <li>Double-entry accounting engine with real-time trial balance</li>
             <li>Indian GST compliance — CGST / SGST / IGST, GSTR-1 &amp; GSTR-3B</li>
             <li>Multi-company and multi financial-year support</li>
-            <li>Web and Android, powered by Supabase</li>
+            <li>Web and Android, powered by Pramod Kumar</li>
           </ul>
         </div>
         <p className="text-sm text-muted-foreground">
