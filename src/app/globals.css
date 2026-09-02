@@ -176,3 +176,29 @@
   0%, 100% { opacity: 0.5; }
   50%      { opacity: 1; }
 }
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #invoice-print,
+  #invoice-print * {
+    visibility: visible;
+  }
+  #invoice-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    background: #fff !important;
+    color: #0f172a;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+}

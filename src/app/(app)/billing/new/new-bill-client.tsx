@@ -23,11 +23,13 @@ import type { BillingLedgers, ItemRow } from "@/lib/types";
 
 export function NewBillClient({
   initialMode,
+  hideTabs = false,
 }: {
-  initialMode: "sales" | "purchase";
+  initialMode: "sales" | "purchase" | "credit_note" | "debit_note";
+  hideTabs?: boolean;
 }) {
   const { companies, activeCompany, activeFY, isLoadingFY } = useCompany();
-  const [mode, setMode] = useState<"sales" | "purchase">(initialMode);
+  const [mode, setMode] = useState<"sales" | "purchase" | "credit_note" | "debit_note">(initialMode);
   const [ledgers, setLedgers] = useState<BillingLedgers | null>(null);
   const [items, setItems] = useState<ItemRow[]>([]);
 
@@ -91,9 +93,15 @@ export function NewBillClient({
     );
   }
 
-  const switchMode = (next: "sales" | "purchase") => {
+  const switchMode = (next: "sales" | "purchase" | "credit_note" | "debit_note") => {
     if (next !== mode) setMode(next);
   };
+
+  const title =
+    mode === "sales" ? "New sales bill"
+    : mode === "purchase" ? "New purchase bill"
+    : mode === "credit_note" ? "New credit note"
+    : "New debit note";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -105,22 +113,24 @@ export function NewBillClient({
               Billing
             </Link>
           </Button>
-          <h1 className="text-2xl font-semibold tracking-tight">New bill</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         </div>
       </div>
 
-      <Tabs value={mode} onValueChange={(v) => switchMode(v as "sales" | "purchase")}>
-        <TabsList>
-          <TabsTrigger value="sales">
-            <ShoppingCart className="size-4" />
-            Sales
-          </TabsTrigger>
-          <TabsTrigger value="purchase">
-            <ShoppingBag className="size-4" />
-            Purchase
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {!hideTabs && (
+        <Tabs value={mode} onValueChange={(v) => switchMode(v as "sales" | "purchase")}>
+          <TabsList>
+            <TabsTrigger value="sales">
+              <ShoppingCart className="size-4" />
+              Sales
+            </TabsTrigger>
+            <TabsTrigger value="purchase">
+              <ShoppingBag className="size-4" />
+              Purchase
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       <BillForm
         key={mode}

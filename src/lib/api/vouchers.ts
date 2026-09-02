@@ -146,3 +146,33 @@ export async function cancelVoucher(voucherId: string): Promise<void> {
   });
   if (error) throw error;
 }
+
+export async function fetchPartyDetail(
+  companyId: string,
+  partyName: string
+): Promise<{
+  name: string;
+  gstin: string | null;
+  state_code: string | null;
+  address: string | null;
+  city: string | null;
+} | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ledgers")
+    .select("name, gstin, state_code, address_line1, city")
+    .eq("company_id", companyId)
+    .eq("is_party", true)
+    .ilike("name", partyName)
+    .order("is_active", { ascending: false })
+    .limit(1)
+    .single();
+  if (error || !data) return null;
+  return {
+    name: data.name,
+    gstin: data.gstin,
+    state_code: data.state_code,
+    address: (data as { address_line1?: string | null }).address_line1 ?? null,
+    city: (data as { city?: string | null }).city ?? null,
+  };
+}

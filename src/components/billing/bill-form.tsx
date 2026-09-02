@@ -53,11 +53,13 @@ export function BillForm({
   companyId: string;
   fyId: string;
   companyStateCode: string | null;
-  mode: "sales" | "purchase";
+  mode: "sales" | "purchase" | "credit_note" | "debit_note";
   ledgers: BillingLedgers;
   items: ItemRow[];
 }) {
   const router = useRouter();
+  const isSales = mode === "sales" || mode === "credit_note";
+  const isReturn = mode === "credit_note" || mode === "debit_note";
   const [date, setDate] = useState(() => {
     const d = new Date();
     const m = `${d.getMonth() + 1}`.padStart(2, "0");
@@ -156,14 +158,14 @@ export function BillForm({
       return;
     }
 
-    const salesA = mode === "sales" ? ledgers.sales : null;
-    const purchaseA = mode === "purchase" ? ledgers.purchase : null;
+    const salesA = isSales ? ledgers.sales : null;
+    const purchaseA = !isSales ? ledgers.purchase : null;
     const taxLedgers = ledgers;
-    if (mode === "sales" && (!salesA || !taxLedgers.cgstOut || !taxLedgers.sgstOut || !taxLedgers.igstOut)) {
+    if (isSales && (!salesA || !taxLedgers.cgstOut || !taxLedgers.sgstOut || !taxLedgers.igstOut)) {
       toast.error("Missing billing ledgers. Ensure Sales A/c and GST output ledgers exist.");
       return;
     }
-    if (mode === "purchase" && (!purchaseA || !taxLedgers.cgstIn || !taxLedgers.sgstIn || !taxLedgers.igstIn)) {
+    if (!isSales && (!purchaseA || !taxLedgers.cgstIn || !taxLedgers.sgstIn || !taxLedgers.igstIn)) {
       toast.error("Missing billing ledgers. Ensure Purchase A/c and GST input ledgers exist.");
       return;
     }
@@ -184,9 +186,9 @@ export function BillForm({
         igst: row.split.igst,
       }));
 
-    const isSales = mode === "sales";
     const entries = buildEntries({
       isSales,
+      isReturn,
       partyId,
       grand,
       settled,
@@ -211,7 +213,7 @@ export function BillForm({
       const voucherId = await postBill({
         companyId,
         fyId,
-        type: isSales ? "sales" : "purchase",
+        type: mode,
         date,
         invoiceNo,
         placeOfSupply: supplyState,
@@ -220,7 +222,12 @@ export function BillForm({
         entries,
         items: itemsPayload,
       });
-      toast.success(`${isSales ? "Sales" : "Purchase"} bill ${invoiceNo || voucherId} posted`);
+      const label =
+        mode === "sales" ? "Sales bill"
+        : mode === "purchase" ? "Purchase bill"
+        : mode === "credit_note" ? "Credit note"
+        : "Debit note";
+      toast.success(`${label} ${invoiceNo || voucherId} posted`);
       router.push(`/vouchers/${voucherId}`);
       router.refresh();
     } catch (err) {
@@ -236,8 +243,11 @@ export function BillForm({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          {mode === "sales" ? "New sales invoice" : "New purchase bill"}
-          <Badge variant={mode === "sales" ? "default" : "secondary"}>{mode}</Badge>
+          {mode === "sales" ? "New sales invoice"
+            : mode === "purchase" ? "New purchase bill"
+            : mode === "credit_note" ? "New credit note (sales return)"
+            : "New debit note (purchase return)"}
+          <Badge variant={mode === "sales" || mode === "credit_note" ? "default" : "secondary"}>{mode}</Badge>
         </CardTitle>
         <CardDescription>
           Lines create stock postings, GST is computed against the place of
@@ -281,7 +291,9 @@ export function BillForm({
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="bill-no">
-                  {mode === "sales" ? "Invoice no." : "Bill no."}
+                  {mode === "sales" ? "Invoice no."
+                    : mode === "purchase" ? "Bill no."
+                    : "Note no."}
                 </Label>
                 <Input
                   id="bill-no"
@@ -479,7 +491,10 @@ export function BillForm({
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
-              Post {mode === "sales" ? "sales invoice" : "purchase bill"}
+              {mode === "sales" ? "Post sales invoice"
+                : mode === "purchase" ? "Post purchase bill"
+                : mode === "credit_note" ? "Post credit note"
+                : "Post debit note"}
             </Button>
           </div>
         </CardContent>
@@ -490,6 +505,7 @@ export function BillForm({
 
 function buildEntries(input: {
   isSales: boolean;
+  isReturn: boolean;
   partyId: string;
   grand: number;
   settled: number;
@@ -514,23 +530,47 @@ function buildEntries(input: {
   };
 
   if (input.isSales) {
-    if (input.settled > 0 && input.settleLedgerId) {
-      push(input.settleLedgerId, input.settled, 0);
+    if (input.isReturn) {
+      // Credit note: reverse the sale (Sales Dr, output tax Dr, party Cr)
+      if (input.settled > 0 && input.settleLedgerId) {
+        push(input.settleLedgerId, 0, input.settled);
+      }
+      push(input.salesA, input.taxable, 0);
+      push(input.cgstOut, input.cgst, 0);
+      push(input.sgstOut, input.sgst, 0);
+      push(input.igstOut, input.igst, 0);
+      push(input.partyId, 0, input.balanceSettle);
+    } else {
+      if (input.settled > 0 && input.settleLedgerId) {
+        push(input.settleLedgerId, input.settled, 0);
+      }
+      push(input.partyId, input.balanceSettle, 0);
+      push(input.salesA, 0, input.taxable);
+      push(input.cgstOut, 0, input.cgst);
+      push(input.sgstOut, 0, input.sgst);
+      push(input.igstOut, 0, input.igst);
     }
-    push(input.partyId, input.balanceSettle, 0);
-    push(input.salesA, 0, input.taxable);
-    push(input.cgstOut, 0, input.cgst);
-    push(input.sgstOut, 0, input.sgst);
-    push(input.igstOut, 0, input.igst);
   } else {
-    push(input.purchaseA, input.taxable, 0);
-    push(input.cgstIn, input.cgst, 0);
-    push(input.sgstIn, input.sgst, 0);
-    push(input.igstIn, input.igst, 0);
-    if (input.settled > 0 && input.settleLedgerId) {
-      push(input.settleLedgerId, 0, input.settled);
+    if (input.isReturn) {
+      // Debit note: reverse the purchase (party Dr, Purchase Cr, input tax Cr)
+      if (input.settled > 0 && input.settleLedgerId) {
+        push(input.settleLedgerId, input.settled, 0);
+      }
+      push(input.partyId, input.balanceSettle, 0);
+      push(input.purchaseA, 0, input.taxable);
+      push(input.cgstIn, 0, input.cgst);
+      push(input.sgstIn, 0, input.sgst);
+      push(input.igstIn, 0, input.igst);
+    } else {
+      push(input.purchaseA, input.taxable, 0);
+      push(input.cgstIn, input.cgst, 0);
+      push(input.sgstIn, input.sgst, 0);
+      push(input.igstIn, input.igst, 0);
+      if (input.settled > 0 && input.settleLedgerId) {
+        push(input.settleLedgerId, 0, input.settled);
+      }
+      push(input.partyId, 0, input.balanceSettle);
     }
-    push(input.partyId, 0, input.balanceSettle);
   }
   return entries;
 }

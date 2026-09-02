@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ShoppingBag, ShoppingCart } from "lucide-react";
+import { ArrowRight, FileMinus, FilePlus, ShoppingBag, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,6 +104,44 @@ export default function BillingPage() {
             </Button>
           </CardContent>
         </Card>
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileMinus />
+              Credit Notes
+            </CardTitle>
+            <CardDescription>
+              Sales returns that bring stock back in and reverse output GST.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col justify-end">
+            <Button asChild variant="outline">
+              <Link href="/billing/credit-note">
+                New credit note
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FilePlus />
+              Debit Notes
+            </CardTitle>
+            <CardDescription>
+              Purchase returns that send stock back out and reverse input GST.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col justify-end">
+            <Button asChild variant="outline">
+              <Link href="/billing/debit-note">
+                New debit note
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -123,6 +161,8 @@ export default function BillingPage() {
               <SelectItem value="">All bills</SelectItem>
               <SelectItem value="sales">Sales</SelectItem>
               <SelectItem value="purchase">Purchase</SelectItem>
+              <SelectItem value="credit_note">Credit notes</SelectItem>
+              <SelectItem value="debit_note">Debit notes</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>

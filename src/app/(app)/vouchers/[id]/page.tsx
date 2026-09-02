@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Ban, Loader2 } from "lucide-react";
+import { ArrowLeft, Ban, Loader2, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PrintInvoiceDialog } from "@/components/invoice/print-invoice";
 import {
   Card,
   CardContent,
@@ -51,6 +52,7 @@ export default function VoucherDetailPage() {
   const [items, setItems] = useState<VoucherItemRow[]>([]);
   const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,6 +155,18 @@ export default function VoucherDetailPage() {
             <Badge variant="outline" className="text-emerald-600">
               Posted
             </Badge>
+          )}
+          {["sales", "purchase", "credit_note", "debit_note"].includes(
+            voucher.voucher_type
+          ) && (
+            <Button
+              variant="outline"
+              onClick={() => setPrintOpen(true)}
+              disabled={voucher.status === "cancelled"}
+            >
+              <Printer className="size-4" />
+              Print
+            </Button>
           )}
           {voucher.status === "posted" && (
             <Button
@@ -304,7 +318,7 @@ export default function VoucherDetailPage() {
       )}
 
       <Dialog open={confirming} onOpenChange={setConfirming}>
-        <DialogContent className="sm:max-w-sm">
+          <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Cancel this voucher?</DialogTitle>
             <DialogDescription>
@@ -332,6 +346,14 @@ export default function VoucherDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PrintInvoiceDialog
+        company={activeCompany}
+        voucher={voucher}
+        items={items}
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+      />
     </div>
   );
 }
