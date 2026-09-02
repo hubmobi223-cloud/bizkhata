@@ -7,13 +7,6 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -106,17 +99,19 @@ function SignInCard() {
     }
   }
 
+  const glassCard = "w-full max-w-md rounded-2xl border border-white/20 bg-white/70 p-8 shadow-2xl shadow-indigo-950/30 backdrop-blur-md dark:bg-slate-900/60";
+
   if (!configured) {
     return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="mb-2 flex justify-center">
-            <Brand showText={false} />
-          </div>
-          <CardTitle className="text-center">
+      <div className={glassCard}>
+        <div className="mb-4 flex justify-center">
+          <Brand showText={false} />
+        </div>
+        <div className="text-center">
+          <p className="text-base font-semibold text-foreground">
             Supabase not configured
-          </CardTitle>
-          <CardDescription className="text-center">
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
             Create a project at{" "}
             <span className="font-medium text-foreground">supabase.com</span>,
             run the Phase 1 SQL scripts in its SQL editor, then add{" "}
@@ -127,32 +122,42 @@ function SignInCard() {
             <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
               NEXT_PUBLIC_SUPABASE_ANON_KEY
             </code>{" "}
-            to <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">.env.local</code>.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+            to{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+              .env.local
+            </code>
+            .
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <div className="mb-2 flex justify-center">
-          <Brand showText={false} />
-        </div>
-        <CardTitle className="text-center">
+    <div
+      className={glassCard}
+      style={{ animation: "fadeInUp 0.5s ease-out both" }}
+    >
+      <div className="mb-6 flex justify-center">
+        <Brand showText={false} />
+      </div>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {mode === "sign-in" ? "Sign in to BizKhata" : "Create your account"}
-        </CardTitle>
-        <CardDescription className="text-center">
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           {mode === "sign-in"
             ? "Enter your credentials to continue."
             : "Sign up to start keeping books with BizKhata."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </p>
+      </div>
+
+      <div className="space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium text-foreground">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -161,10 +166,13 @@ function SignInCard() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="h-11 rounded-lg border-slate-300 bg-white/70 px-3 transition-shadow focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-800/50"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium text-foreground">
+              Password
+            </Label>
             <div className="relative">
               <Input
                 id="password"
@@ -175,13 +183,13 @@ function SignInCard() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pr-9"
+                className="h-11 rounded-lg border-slate-300 bg-white/70 px-3 pr-10 transition-shadow focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-800/50"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full text-muted-foreground"
+                className="absolute right-1 top-1/2 h-9 -translate-y-1/2 text-muted-foreground hover:bg-transparent"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword((v) => !v)}
               >
@@ -189,22 +197,26 @@ function SignInCard() {
               </Button>
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-11 w-full rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-600/40 disabled:hover:scale-100"
+          >
             {loading && <Loader2 className="animate-spin" />}
             {mode === "sign-in" ? "Sign in" : "Create account"}
           </Button>
         </form>
 
-        <div className="flex items-center gap-3">
-          <Separator className="flex-1" />
+        <div className="flex items-center gap-3 py-1">
+          <Separator className="flex-1 bg-slate-300/70 dark:bg-slate-700" />
           <span className="text-xs text-muted-foreground">or</span>
-          <Separator className="flex-1" />
+          <Separator className="flex-1 bg-slate-300/70 dark:bg-slate-700" />
         </div>
 
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="h-11 w-full rounded-lg border-slate-300 bg-white/60 text-foreground transition-all duration-200 hover:border-indigo-400 hover:bg-white hover:shadow-md hover:shadow-indigo-500/20 dark:border-slate-700 dark:bg-slate-800/40"
           onClick={handleGoogleSignIn}
         >
           <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -228,13 +240,13 @@ function SignInCard() {
           Continue with Google
         </Button>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="pt-1 text-center text-sm text-muted-foreground">
           {mode === "sign-in" ? (
             <>
               New to BizKhata?{" "}
               <button
                 type="button"
-                className="font-medium text-foreground underline underline-offset-4"
+                className="font-semibold text-indigo-600 underline underline-offset-4 transition-colors hover:text-indigo-500 dark:text-indigo-400"
                 onClick={() => setMode("sign-up")}
               >
                 Create an account
@@ -245,7 +257,7 @@ function SignInCard() {
               Already have an account?{" "}
               <button
                 type="button"
-                className="font-medium text-foreground underline underline-offset-4"
+                className="font-semibold text-indigo-600 underline underline-offset-4 transition-colors hover:text-indigo-500 dark:text-indigo-400"
                 onClick={() => setMode("sign-in")}
               >
                 Sign in
@@ -253,8 +265,8 @@ function SignInCard() {
             </>
           )}
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
