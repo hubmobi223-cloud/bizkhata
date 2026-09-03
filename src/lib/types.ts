@@ -240,7 +240,23 @@ export interface BillItemInput {
   igst: number;
 }
 
+export interface TaxMaster {
+  id: string;
+  company_id: string;
+  name: string;
+  rate_pct: number;
+  output_ledger_id: string | null;
+  input_ledger_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  output_ledger?: { id: string; name: string } | null;
+  input_ledger?: { id: string; name: string } | null;
+}
+
 export interface BillingLedgers {
+
+
   parties: LedgerRow[];
   cashBanks: LedgerRow[];
   sales: LedgerRow | null;

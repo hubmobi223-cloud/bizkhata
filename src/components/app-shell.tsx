@@ -11,12 +11,14 @@ import {
   LayoutDashboard,
   ReceiptText,
   Settings,
+  ShieldCheck,
   Store,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { CompanySwitcher } from "@/components/company/company-switcher";
 import { FinancialYearBadge } from "@/components/financial-year-badge";
 import { UserMenu } from "@/components/user-menu";
+import { useCompany } from "@/components/company/company-provider";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -28,15 +30,25 @@ interface NavItem {
   note?: string;
 }
 
-const NAV: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/ledgers", label: "Chart of Accounts", icon: BookOpen },
-  { href: "/items", label: "Items & Inventory", icon: Boxes },
-  { href: "/vouchers", label: "Vouchers", icon: ReceiptText },
-  { href: "/billing", label: "Billing & POS", icon: Store },
-  { href: "/reports", label: "Reports", icon: FileChartColumn },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+function buildNav(canAdmin: boolean): NavItem[] {
+  const items: NavItem[] = [
+    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/ledgers", label: "Chart of Accounts", icon: BookOpen },
+    { href: "/items", label: "Items & Inventory", icon: Boxes },
+    { href: "/vouchers", label: "Vouchers", icon: ReceiptText },
+    { href: "/billing", label: "Billing & POS", icon: Store },
+    { href: "/reports", label: "Reports", icon: FileChartColumn },
+    { href: "/settings", label: "Settings", icon: Settings },
+  ];
+  if (canAdmin) {
+    items.push({
+      href: "/settings/admin",
+      label: "Admin Panel",
+      icon: ShieldCheck,
+    });
+  }
+  return items;
+}
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -86,6 +98,10 @@ export function AppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const { activeCompany } = useCompany();
+  const role = activeCompany?.role ?? "";
+  const canAdmin = role === "owner" || role === "admin";
+  const NAV = buildNav(canAdmin);
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
