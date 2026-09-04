@@ -56,6 +56,7 @@ export function TaxMastersTab({ companyId }: { companyId: string }) {
         const data = await listTaxMasters(companyId);
         setMasters(data);
       } catch (err) {
+        console.error("[TaxMastersTab] load failed:", err);
         toast.error("Could not load tax masters", {
           description: err instanceof Error ? err.message : "Unknown error",
         });

@@ -49,6 +49,7 @@ export function FinancialYearsTab({ companyId }: { companyId: string }) {
         const data = await listFinancialYears(companyId);
         setFys(data);
       } catch (err) {
+        console.error("[FinancialYearsTab] load failed:", err);
         toast.error("Could not load financial years", {
           description: err instanceof Error ? err.message : "Unknown error",
         });

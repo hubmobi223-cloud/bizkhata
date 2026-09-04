@@ -61,6 +61,7 @@ export function MembersTab({
       const data = await listMembers(companyId);
       setMembers(data);
     } catch (err) {
+      console.error("[MembersTab] load failed:", err);
       toast.error("Could not load members", {
         description: err instanceof Error ? err.message : "Unknown error",
       });
@@ -75,6 +76,7 @@ export function MembersTab({
         const data = await listMembers(companyId);
         setMembers(data);
       } catch (err) {
+        console.error("[MembersTab] listMembers failed:", err);
         toast.error("Could not load members", {
           description: err instanceof Error ? err.message : "Unknown error",
         });

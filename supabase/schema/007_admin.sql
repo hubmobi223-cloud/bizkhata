@@ -219,3 +219,19 @@ begin
     delete from public.company_members where id = p_member_id;
 end;
 $$;
+
+-- =====================================================================
+-- Permissions: match the pattern in 005_rls_policies.sql
+-- Revoke from PUBLIC, then grant only to authenticated.
+-- =====================================================================
+revoke all on function public.sp_set_active_fy(uuid, uuid) from public;
+revoke all on function public.fn_list_members(uuid) from public;
+revoke all on function public.fn_add_member(uuid, text, text) from public;
+revoke all on function public.fn_update_member(uuid, uuid, text, boolean) from public;
+revoke all on function public.fn_remove_member(uuid, uuid) from public;
+
+grant execute on function public.sp_set_active_fy(uuid, uuid) to authenticated;
+grant execute on function public.fn_list_members(uuid) to authenticated;
+grant execute on function public.fn_add_member(uuid, text, text) to authenticated;
+grant execute on function public.fn_update_member(uuid, uuid, text, boolean) to authenticated;
+grant execute on function public.fn_remove_member(uuid, uuid) to authenticated;
